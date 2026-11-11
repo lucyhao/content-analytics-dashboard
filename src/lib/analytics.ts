@@ -113,7 +113,8 @@ export function viewsByCategory(articles: Article[], range: RangeDays): Category
       avgViews: Math.round(sum(views) / views.length),
       articles: views.length,
     }))
-    .sort((a, b) => b.avgViews - a.avgViews);
+    // Ties on average views fall back to category name, A→Z, so the order is stable.
+    .sort((a, b) => b.avgViews - a.avgViews || a.category.localeCompare(b.category));
 }
 
 export interface PeerAverages {

@@ -44,7 +44,24 @@ The logic lives in `articleMetrics()` in `src/lib/analytics.ts`.
 npm install
 npm run dev      # http://localhost:5173
 npm run build    # type-check + production build
+npm test         # run unit tests once (Vitest)
+npm run test:watch
 ```
+
+## Tests
+
+`src/lib/analytics.test.ts` covers the analytics logic with small hand-built fixtures
+(known daily views and engagement rates), so every expected value can be checked by hand:
+
+| Area | What is verified |
+|------|------------------|
+| `totals` | total views, engagements, pooled engagement rate, zero-view articles excluded |
+| `articleMetrics` | ranking by views, Top 20% / Middle 60% / Bottom 20%, rounding at 1, 3, 7, 60 articles |
+| `dailyTrend` | per-day sums, zeros before publication, trend adds up to the period total |
+| `viewsByCategory` | per-category totals, rounded averages, sort order (ties A→Z by name) |
+| Empty data | no articles, or articles with no views, return zeros / empty lists (no `NaN`) |
+| Date ranges | 7 / 30 / 90 days cover the right dates; previous-period windows |
+| `articleDetail` | category average, in-category rank, trend start, previous period |
 
 ## Project structure
 
@@ -53,6 +70,7 @@ src/
   data/sampleData.ts      generated sample articles + daily views
   lib/analytics.ts        metrics, tiers, trend and formatting helpers
   lib/router.ts           hash routes: dashboard and article pages
+  lib/analytics.test.ts   unit tests for the analytics logic
   lib/theme.ts            chart colours for light / dark mode
   components/             Overview, Charts, Performance, ArticleTable, ContentPreview, ArticleDetail, Thumbnail
   App.tsx                 layout and filter state
