@@ -2,24 +2,53 @@ import { fmtCompact, fmtNumber, fmtPercent, type ArticleMetrics, type Tier } fro
 import { Thumbnail } from './Thumbnail';
 
 const TIERS: { tier: Tier; label: string; rule: string }[] = [
-  { tier: 'Top', label: 'Top performers', rule: 'Top 20% by views' },
-  { tier: 'Middle', label: 'Middle', rule: 'Middle 60% by views' },
-  { tier: 'Bottom', label: 'Needs attention', rule: 'Bottom 20% by views' },
+  { tier: 'Top', label: 'Top performers', rule: 'Top 20%' },
+  { tier: 'Middle', label: 'Middle', rule: 'Middle 60%' },
+  { tier: 'Bottom', label: 'Needs attention', rule: 'Bottom 20%' },
 ];
 
 interface Props {
   rows: ArticleMetrics[];
+  rangeLabel: string;
+  category: string;
   onSelect: (id: string) => void;
   onFilterTier: (tier: Tier) => void;
 }
 
-export function Performance({ rows, onSelect, onFilterTier }: Props) {
+export function Performance({ rows, rangeLabel, category, onSelect, onFilterTier }: Props) {
   const totalViews = rows.reduce((s, r) => s + r.views, 0);
+  // Rows arrive sorted by views, so each tier is a contiguous block of ranks.
+  const rankRange = (tier: Tier) => {
+    const ranks = rows.flatMap((r, i) => (r.tier === tier ? [i + 1] : []));
+    if (!ranks.length) return 'no articles';
+    const [first, last] = [ranks[0], ranks[ranks.length - 1]];
+    return first === last ? `rank ${first}` : `ranks ${first}–${last}`;
+  };
   return (
     <section className="panel" aria-labelledby="performance-heading">
       <div className="panel__head">
         <h2 id="performance-heading">Performance tiers</h2>
-        <span className="panel__hint">Ranked by views in the selected period</span>
+        <span className="panel__hint">
+          {rows.length} articles ranked · {rangeLabel}
+        </span>
+      </div>
+      <div className="method" role="note">
+        <p>
+          <strong>How tiers are calculated:</strong> Performance tiers are calculated by ranking
+          articles based on total views within the selected reporting period ({rangeLabel.toLowerCase()}).
+          The top 20% of articles are <strong>Top</strong>, the next 60% are <strong>Middle</strong>{' '}
+          and the bottom 20% are <strong>Bottom</strong>.
+        </p>
+        <ul>
+          <li>Only articles with at least one view in the period are ranked.</li>
+          <li>Top and Bottom sizes are rounded up, so each has at least one article.</li>
+          <li>
+            {category === 'All'
+              ? 'All categories are ranked together.'
+              : `A category filter is active, so articles are ranked within ${category} only.`}
+          </li>
+          <li>Tiers are relative: an article’s tier can change when the period or filter changes.</li>
+        </ul>
       </div>
       <div className="tiers">
         {TIERS.map(({ tier, label, rule }) => {
@@ -34,7 +63,9 @@ export function Performance({ rows, onSelect, onFilterTier }: Props) {
                 <span className={`badge badge--${tier.toLowerCase()}`}>{tier}</span>
                 <h3>{label}</h3>
               </header>
-              <p className="tier__rule">{rule}</p>
+              <p className="tier__rule">
+                {rule} by views · {rankRange(tier)} of {rows.length}
+              </p>
               <dl className="tier__stats">
                 <div>
                   <dt>Articles</dt>

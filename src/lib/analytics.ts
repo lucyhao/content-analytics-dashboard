@@ -3,6 +3,12 @@ import { HISTORY_DAYS, SAMPLE_DATES, type Article, type Category } from '../data
 export type RangeDays = 7 | 30 | 90;
 export type Tier = 'Top' | 'Middle' | 'Bottom';
 
+export const RANGES: { days: RangeDays; label: string }[] = [
+  { days: 7, label: 'Last 7 days' },
+  { days: 30, label: 'Last 30 days' },
+  { days: 90, label: 'Last 90 days' },
+];
+
 export interface ArticleMetrics {
   article: Article;
   views: number;
@@ -108,6 +114,69 @@ export function viewsByCategory(articles: Article[], range: RangeDays): Category
       articles: views.length,
     }))
     .sort((a, b) => b.avgViews - a.avgViews);
+}
+
+export interface PeerAverages {
+  views: number;
+  engagements: number;
+  engagementRate: number;
+  likes: number;
+  comments: number;
+  shares: number;
+}
+
+export interface ArticleDetail {
+  self: ArticleMetrics;
+  /** Mean per article across the same category (including this one). */
+  categoryAvg: PeerAverages;
+  categoryRank: number;
+  categorySize: number;
+  previous: Totals | null;
+  trend: { date: string; views: number; categoryAvg: number }[];
+}
+
+const mean = (list: number[]) => (list.length ? sum(list) / list.length : 0);
+
+/**
+ * Full analysis of one article for the period. Tier is ranked across all articles,
+ * comparisons are against articles in the same category.
+ */
+export function articleDetail(id: string, all: Article[], range: RangeDays): ArticleDetail | null {
+  const self = articleMetrics(all, range).find((r) => r.article.id === id);
+  if (!self) return null;
+
+  const category = self.article.category;
+  const peers = articleMetrics(
+    all.filter((a) => a.category === category),
+    range,
+  );
+  const categoryAvg: PeerAverages = {
+    views: mean(peers.map((p) => p.views)),
+    engagements: mean(peers.map((p) => p.engagements)),
+    engagementRate: mean(peers.map((p) => p.engagementRate)),
+    likes: mean(peers.map((p) => p.likes)),
+    comments: mean(peers.map((p) => p.comments)),
+    shares: mean(peers.map((p) => p.shares)),
+  };
+
+  const [start, end] = window(range);
+  const peerArticles = peers.map((p) => p.article);
+  const firstDay = Math.max(start, SAMPLE_DATES.indexOf(self.article.publishedAt));
+  const trend = SAMPLE_DATES.slice(firstDay, end).map((date, i) => {
+    const day = firstDay + i;
+    // Average only over category articles that were live that day.
+    const live = peerArticles.map((a) => a.dailyViews[day]).filter((v) => v > 0);
+    return { date, views: self.article.dailyViews[day], categoryAvg: Math.round(mean(live)) };
+  });
+
+  return {
+    self,
+    categoryAvg,
+    categoryRank: peers.findIndex((p) => p.article.id === id) + 1,
+    categorySize: peers.length,
+    previous: hasPreviousPeriod(range) ? totals([self.article], range, true) : null,
+    trend,
+  };
 }
 
 const compact = new Intl.NumberFormat('en-GB', { notation: 'compact', maximumFractionDigits: 1 });

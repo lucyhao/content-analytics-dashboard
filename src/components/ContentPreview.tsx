@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { fmtDate, fmtNumber, fmtPercent, type ArticleMetrics } from '../lib/analytics';
+import { articleHref } from '../lib/router';
 import { Thumbnail } from './Thumbnail';
 
 interface Props {
@@ -62,6 +63,9 @@ export function ContentPreview({ row, onClose }: Props) {
           ))}
         </dl>
         <p className="preview__note muted">Stats cover the selected period.</p>
+        <a className="button" href={articleHref(article.id)}>
+          View full analysis →
+        </a>
       </aside>
     </>
   );

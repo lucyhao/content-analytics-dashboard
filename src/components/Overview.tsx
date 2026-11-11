@@ -6,9 +6,10 @@ interface Props {
   rangeLabel: string;
 }
 
-function Delta({ now, before, percentPoints }: { now: number; before: number; percentPoints?: boolean }) {
+export function Delta({ now, before, percentPoints }: { now: number; before: number; percentPoints?: boolean }) {
   if (!before) return null;
   const change = percentPoints ? (now - before) * 100 : ((now - before) / before) * 100;
+  if (Math.abs(change) < 0.05) return <span className="delta muted">No change</span>;
   const up = change >= 0;
   const text = percentPoints ? `${Math.abs(change).toFixed(1)} pts` : `${Math.abs(change).toFixed(1)}%`;
   return (

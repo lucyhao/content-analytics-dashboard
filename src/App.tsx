@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { ArticleDetail } from './components/ArticleDetail';
 import { ArticleTable } from './components/ArticleTable';
 import { CategoryChart, TrendChart } from './components/Charts';
 import { ContentPreview } from './components/ContentPreview';
@@ -6,6 +7,7 @@ import { Overview } from './components/Overview';
 import { Performance } from './components/Performance';
 import { CATEGORIES, SAMPLE_ARTICLES, SAMPLE_DATES, type Category } from './data/sampleData';
 import {
+  RANGES,
   articleMetrics,
   dailyTrend,
   fmtDate,
@@ -15,16 +17,12 @@ import {
   type RangeDays,
   type Tier,
 } from './lib/analytics';
-
-const RANGES: { days: RangeDays; label: string }[] = [
-  { days: 7, label: 'Last 7 days' },
-  { days: 30, label: 'Last 30 days' },
-  { days: 90, label: 'Last 90 days' },
-];
+import { useRoute } from './lib/router';
 
 const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 
 export default function App() {
+  const route = useRoute();
   const [range, setRange] = useState<RangeDays>(30);
   const [category, setCategory] = useState<Category | 'All'>('All');
   const [tierFilter, setTierFilter] = useState<Tier | 'All'>('All');
@@ -54,6 +52,17 @@ export default function App() {
     if (!isMobile()) document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth' });
   };
   const closePreview = useCallback(() => setSelectedId(null), []);
+
+  if (route.page === 'article') {
+    return (
+      <div className="app">
+        <ArticleDetail id={route.id} range={range} onRangeChange={setRange} />
+        <footer className="footer">
+          Content Analytics Dashboard · Demo project · All data is sample data
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -115,6 +124,8 @@ export default function App() {
 
       <Performance
         rows={rows}
+        rangeLabel={rangeLabel}
+        category={category}
         onSelect={(id) => {
           setSelectedId(id);
           scrollToArticles();
