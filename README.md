@@ -2,6 +2,8 @@
 
 A responsive content analytics dashboard built with React, TypeScript and Recharts.
 
+**Live demo:** https://lucyhao.github.io/content-analytics-dashboard/
+
 > **All data is sample data.** Articles, authors and figures are generated in
 > `src/data/sampleData.ts` with a fixed seed. Nothing comes from a real publication
 > or news organisation.
@@ -65,6 +67,12 @@ npm run build    # type-check + production build
 npm test         # run unit tests once (Vitest)
 npm run test:watch
 ```
+
+## Deployment
+
+Every push to `main` runs `.github/workflows/deploy.yml`: lint → tests → build → publish `dist/`
+to GitHub Pages. The Vite `base` is `/content-analytics-dashboard/` for builds and `vite preview`,
+and routes use the URL hash (`#/article/<id>`), so deep links work on static hosting.
 
 ## Tests
 
