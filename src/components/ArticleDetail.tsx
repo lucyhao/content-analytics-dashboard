@@ -19,7 +19,9 @@ import {
   type RangeDays,
 } from '../lib/analytics';
 import { dashboardHref } from '../lib/router';
+import { articleTrendSummary } from '../lib/chartSummaries';
 import { useChartColors } from '../lib/theme';
+import { ChartFigure } from './ChartFigure';
 import { Delta } from './Overview';
 import { Thumbnail } from './Thumbnail';
 
@@ -235,7 +237,7 @@ export function ArticleDetail({ id, range, onRangeChange }: Props) {
             <span className="panel__hint">Starts on publication day, {fmtDate(article.publishedAt)}</span>
           )}
         </div>
-        <ul className="legend" aria-label="Legend">
+        <ul className="legend" aria-hidden="true">
           <li>
             <span className="legend__line" style={{ background: c.series }} /> This article
           </li>
@@ -244,13 +246,16 @@ export function ArticleDetail({ id, range, onRangeChange }: Props) {
             {article.category} average per article
           </li>
         </ul>
-        <div
-          className="chart"
-          role="img"
-          aria-label={`Line chart of daily views for this article compared with the ${article.category} average`}
+        <ChartFigure
+          summary={articleTrendSummary(trend, article.category)}
+          table={{
+            caption: `Daily views for this article and the ${article.category} average per article`,
+            columns: ['Date', 'This article', `${article.category} average`],
+            rows: trend.map((p) => [fmtDate(p.date, true), fmtNumber(p.views), fmtNumber(p.categoryAvg)]),
+          }}
         >
           <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={trend} margin={{ top: 8, right: 44, bottom: 0, left: 0 }}>
+            <LineChart accessibilityLayer={false} data={trend} margin={{ top: 8, right: 44, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke={c.grid} />
               <XAxis
                 dataKey="date"
@@ -291,7 +296,7 @@ export function ArticleDetail({ id, range, onRangeChange }: Props) {
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </ChartFigure>
       </section>
 
       <div className="grid-detail">
@@ -311,7 +316,7 @@ export function ArticleDetail({ id, range, onRangeChange }: Props) {
                     <span className="breakdown__label">{b.label}</span>
                     <span className="breakdown__value">{fmtNumber(b.value)}</span>
                   </div>
-                  <div className="share-bar">
+                  <div className="share-bar" aria-hidden="true">
                     <span style={{ width: `${share * 100}%` }} />
                   </div>
                   <div className="breakdown__meta muted">
@@ -329,7 +334,7 @@ export function ArticleDetail({ id, range, onRangeChange }: Props) {
             <h2 id="compare-heading">Compared with {article.category} average</h2>
             <span className="panel__hint">Mean of {categorySize} articles</span>
           </div>
-          <ul className="legend" aria-label="Legend">
+          <ul className="legend" aria-hidden="true">
             <li>
               <span className="legend__swatch" style={{ background: c.series }} /> This article
             </li>
@@ -349,10 +354,7 @@ export function ArticleDetail({ id, range, onRangeChange }: Props) {
                       {diff.text} <span className="sr-only">vs category average</span>
                     </span>
                   </div>
-                  <div
-                    className="bullet"
-                    title={`This article ${row.fmt(row.value)} · Category average ${row.fmt(row.avg)}`}
-                  >
+                  <div className="bullet" aria-hidden="true">
                     <span className="bullet__bar" style={{ width: `${(row.value / max) * 100}%` }} />
                     <span className="bullet__avg" style={{ left: `${(row.avg / max) * 100}%` }} />
                   </div>

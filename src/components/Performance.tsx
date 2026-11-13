@@ -80,24 +80,30 @@ export function Performance({ rows, rangeLabel, category, onSelect, onFilterTier
                   <dd>{fmtPercent(views ? engagements / views : 0)}</dd>
                 </div>
               </dl>
-              <div className="share-bar" title={`${fmtPercent(share)} of all views`}>
+              <div className="share-bar" aria-hidden="true">
                 <span style={{ width: `${share * 100}%` }} />
               </div>
               <ul className="tier__list">
                 {preview.map((r) => (
                   <li key={r.article.id}>
-                    <button type="button" className="mini" onClick={() => onSelect(r.article.id)}>
+                    <button
+                      type="button"
+                      className="mini"
+                      aria-haspopup="dialog"
+                      onClick={() => onSelect(r.article.id)}
+                    >
                       <Thumbnail category={r.article.category} />
                       <span className="mini__title">{r.article.title}</span>
-                      <span className="mini__value" title={`${fmtNumber(r.views)} views`}>
-                        {fmtCompact(r.views)}
+                      <span className="mini__value">
+                        <span aria-hidden="true">{fmtCompact(r.views)}</span>
+                        <span className="sr-only">, {fmtNumber(r.views)} views</span>
                       </span>
                     </button>
                   </li>
                 ))}
               </ul>
               <button type="button" className="link" onClick={() => onFilterTier(tier)}>
-                Show all {inTier.length} in table →
+                Show all {inTier.length} in table<span aria-hidden="true"> →</span>
               </button>
             </article>
           );

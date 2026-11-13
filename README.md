@@ -19,6 +19,24 @@ A responsive content analytics dashboard built with React, TypeScript and Rechar
 - **Filters** – last 7 / 30 / 90 days and category
 - **Responsive** – desktop, tablet and phone layouts; follows system dark mode
 
+## Accessibility
+
+- **Preview dialog** – `role="dialog"` labelled by the article title. On wide screens it is a
+  non-modal side panel; on small screens it is a modal bottom sheet (`aria-modal`, focus trap,
+  page scroll locked). Focus moves to the dialog title on open and returns to the button that
+  opened it on close (Escape, close button or backdrop).
+- **Charts** – each chart is a `<figure>` with a plain-language summary as its caption
+  (`src/lib/chartSummaries.ts`) and a "Show data table" disclosure with the exact values.
+  The SVG itself is hidden from assistive tech.
+- **Table** – each row has one control (the title button, with `aria-haspopup="dialog"` /
+  `aria-expanded`); clicking elsewhere on the row goes through that same button. Sortable headers
+  use `aria-sort`, the result count is a live region, and pagination is a labelled `nav`.
+- **Other** – `main` landmark, visible `:focus-visible` rings, text contrast ≥ 4.5:1 in light and
+  dark mode, and smooth scrolling is disabled under `prefers-reduced-motion`.
+
+Checked with axe-core (no violations on the dashboard, with the preview open, and on the article
+page, in light and dark mode) plus scripted keyboard tests in Chrome.
+
 ## How performance tiers are calculated
 
 Performance tiers are calculated by ranking articles based on total views within the selected
@@ -62,6 +80,7 @@ npm run test:watch
 | Empty data | no articles, or articles with no views, return zeros / empty lists (no `NaN`) |
 | Date ranges | 7 / 30 / 90 days cover the right dates; previous-period windows |
 | `articleDetail` | category average, in-category rank, trend start, previous period |
+| Chart summaries | `chartSummaries.test.ts`: totals, highs/lows, trend direction, empty data |
 
 ## Project structure
 

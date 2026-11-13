@@ -74,9 +74,11 @@ export function ArticleTable({ rows, selectedId, tierFilter, onTierFilter, onSel
   return (
     <section className="panel" aria-labelledby="table-heading">
       <div className="panel__head">
-        <h2 id="table-heading">Articles</h2>
-        <span className="panel__hint">
-          {visible.length} of {rows.length}
+        <h2 id="table-heading" tabIndex={-1}>
+          Articles
+        </h2>
+        <span className="panel__hint" role="status">
+          {visible.length} of {rows.length} articles
         </span>
       </div>
 
@@ -111,6 +113,12 @@ export function ArticleTable({ rows, selectedId, tierFilter, onTierFilter, onSel
 
       <div className="table-wrap">
         <table className="table">
+          <caption className="sr-only">
+            Sample articles{tierFilter === 'All' ? '' : ` in the ${tierFilter} tier`}, sorted by{' '}
+            {COLUMNS.find((c) => c.key === sort.key)!.label}{' '}
+            {sort.dir === 'asc' ? 'ascending' : 'descending'}. Column headers are sort buttons;
+            select an article title to open its preview.
+          </caption>
           <thead>
             <tr>
               {COLUMNS.map((col) => {
@@ -133,14 +141,30 @@ export function ArticleTable({ rows, selectedId, tierFilter, onTierFilter, onSel
             </tr>
           </thead>
           <tbody>
-            {pageRows.map((r) => (
+            {pageRows.map((r) => {
+              const selected = r.article.id === selectedId;
+              return (
               <tr
                 key={r.article.id}
-                className={r.article.id === selectedId ? 'is-selected' : undefined}
-                onClick={() => onSelect(r.article.id)}
+                className={selected ? 'is-selected' : undefined}
+                // Mouse shortcut: a click anywhere on the row acts like its title button,
+                // so keyboard and mouse share one control and focus can return to it.
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  const button = e.currentTarget.querySelector<HTMLButtonElement>('.row-title');
+                  button?.focus();
+                  button?.click();
+                }}
               >
                 <td>
-                  <button type="button" className="row-title" onClick={() => onSelect(r.article.id)}>
+                  <button
+                    type="button"
+                    className="row-title"
+                    aria-haspopup="dialog"
+                    aria-expanded={selected}
+                    aria-controls={selected ? 'content-preview' : undefined}
+                    onClick={() => onSelect(r.article.id)}
+                  >
                     <Thumbnail category={r.article.category} />
                     <span>
                       <span className="row-title__text">{r.article.title}</span>
@@ -156,7 +180,8 @@ export function ArticleTable({ rows, selectedId, tierFilter, onTierFilter, onSel
                 <td className="num hide-sm">{fmtNumber(r.engagements)}</td>
                 <td className="num">{fmtPercent(r.engagementRate)}</td>
               </tr>
-            ))}
+              );
+            })}
             {pageRows.length === 0 && (
               <tr>
                 <td colSpan={COLUMNS.length} className="empty">
@@ -169,21 +194,28 @@ export function ArticleTable({ rows, selectedId, tierFilter, onTierFilter, onSel
       </div>
 
       {pageCount > 1 && (
-        <div className="pager">
-          <button type="button" disabled={current === 0} onClick={() => setPage(current - 1)}>
-            ← Prev
+        // aria-disabled (not disabled) keeps focus on the button at the first/last page.
+        <nav className="pager" aria-label="Article pages">
+          <button
+            type="button"
+            aria-disabled={current === 0}
+            aria-label="Previous page"
+            onClick={() => current > 0 && setPage(current - 1)}
+          >
+            <span aria-hidden="true">←</span> Prev
           </button>
-          <span>
+          <span aria-live="polite">
             Page {current + 1} of {pageCount}
           </span>
           <button
             type="button"
-            disabled={current >= pageCount - 1}
-            onClick={() => setPage(current + 1)}
+            aria-disabled={current >= pageCount - 1}
+            aria-label="Next page"
+            onClick={() => current < pageCount - 1 && setPage(current + 1)}
           >
-            Next →
+            Next <span aria-hidden="true">→</span>
           </button>
-        </div>
+        </nav>
       )}
     </section>
   );

@@ -18,8 +18,9 @@ import {
   type Tier,
 } from './lib/analytics';
 import { useRoute } from './lib/router';
+import { MOBILE_QUERY } from './lib/useMediaQuery';
 
-const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+const isMobile = () => window.matchMedia(MOBILE_QUERY).matches;
 
 export default function App() {
   const route = useRoute();
@@ -49,14 +50,27 @@ export default function App() {
   )}`;
 
   const scrollToArticles = () => {
-    if (!isMobile()) document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth' });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!isMobile()) {
+      document
+        .getElementById('articles')
+        ?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
   };
+  /** Scroll to the table and move keyboard focus to its heading. */
+  const focusArticles = () => {
+    scrollToArticles();
+    document.getElementById('table-heading')?.focus({ preventScroll: !isMobile() });
+  };
+
   const closePreview = useCallback(() => setSelectedId(null), []);
 
   if (route.page === 'article') {
     return (
       <div className="app">
-        <ArticleDetail id={route.id} range={range} onRangeChange={setRange} />
+        <main className="stack">
+          <ArticleDetail id={route.id} range={range} onRangeChange={setRange} />
+        </main>
         <footer className="footer">
           Content Analytics Dashboard · Demo project · All data is sample data
         </footer>
@@ -77,6 +91,8 @@ export default function App() {
           Sample data
         </span>
       </header>
+
+      <main className="stack">
 
       <div className="notice" role="note">
         <strong>Sample data only.</strong> Every article, author and figure on this page is generated
@@ -132,7 +148,7 @@ export default function App() {
         }}
         onFilterTier={(tier) => {
           setTierFilter(tier);
-          scrollToArticles();
+          focusArticles();
         }}
       />
 
@@ -146,6 +162,8 @@ export default function App() {
         />
         <ContentPreview row={selectedRow} onClose={closePreview} />
       </div>
+
+      </main>
 
       <footer className="footer">
         Content Analytics Dashboard · Demo project · All data is sample data

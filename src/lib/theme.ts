@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useMediaQuery } from './useMediaQuery';
 
 // SVG presentation attributes can't read CSS variables reliably, so charts get
 // concrete hex values for the active colour scheme.
@@ -20,15 +20,6 @@ const DARK: typeof LIGHT = {
   surface: '#1a1a19',
 };
 
-const query = '(prefers-color-scheme: dark)';
-
-function subscribe(onChange: () => void) {
-  const media = window.matchMedia(query);
-  media.addEventListener('change', onChange);
-  return () => media.removeEventListener('change', onChange);
-}
-
 export function useChartColors() {
-  const dark = useSyncExternalStore(subscribe, () => window.matchMedia(query).matches);
-  return dark ? DARK : LIGHT;
+  return useMediaQuery('(prefers-color-scheme: dark)') ? DARK : LIGHT;
 }

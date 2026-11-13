@@ -18,7 +18,9 @@ import {
   type CategoryPoint,
   type TrendPoint,
 } from '../lib/analytics';
+import { categorySummary, trendSummary } from '../lib/chartSummaries';
 import { useChartColors } from '../lib/theme';
+import { ChartFigure } from './ChartFigure';
 
 interface TooltipPayload<T> {
   active?: boolean;
@@ -51,9 +53,16 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           </span>
         )}
       </div>
-      <div className="chart" role="img" aria-label="Line chart of total daily views over the selected period">
+      <ChartFigure
+        summary={trendSummary(data)}
+        table={{
+          caption: 'Total daily views',
+          columns: ['Date', 'Views'],
+          rows: data.map((p) => [fmtDate(p.date, true), fmtNumber(p.views)]),
+        }}
+      >
         <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+          <AreaChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={c.series} stopOpacity={0.18} />
@@ -91,7 +100,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
             />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
+      </ChartFigure>
     </section>
   );
 }
@@ -122,9 +131,17 @@ export function CategoryChart({ data, selected }: CategoryProps) {
       <div className="panel__head">
         <h2 id="category-heading">Average views per article, by category</h2>
       </div>
-      <div className="chart" role="img" aria-label="Bar chart comparing average views per article in each category">
+      <ChartFigure
+        summary={categorySummary(data)}
+        table={{
+          caption: 'Views by category',
+          columns: ['Category', 'Avg views per article', 'Total views', 'Articles'],
+          rows: data.map((d) => [d.category, fmtNumber(d.avgViews), fmtNumber(d.views), d.articles]),
+        }}
+      >
         <ResponsiveContainer width="100%" height={260}>
           <BarChart
+            accessibilityLayer={false}
             data={data}
             layout="vertical"
             margin={{ top: 4, right: 48, bottom: 0, left: 0 }}
@@ -163,7 +180,7 @@ export function CategoryChart({ data, selected }: CategoryProps) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </div>
+      </ChartFigure>
       {selected !== 'All' && (
         <p className="panel__foot">Highlighting {selected}. Other categories are shown for comparison.</p>
       )}
